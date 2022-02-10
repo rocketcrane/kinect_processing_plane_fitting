@@ -17,9 +17,14 @@ void setup() {
   kinect.init();
 }
 
-void draw() {}
+void draw() {
+}
 
 void mousePressed() {
   getAndSaveImg();
   getPointCloud();
+}
+
+void keyPressed() {
+  planeRANSAC(10.0, 0.6, 100);
 }

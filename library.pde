@@ -23,6 +23,7 @@ void getPointCloud() {
       savedPoints.add(originalPt);
     }
   }
+  print(savedPoints, "\n"); //DEBUG, print all points
 }
 
 void planeRANSAC(float tolerance, float threshold, int iterations) {
@@ -71,10 +72,12 @@ void planeRANSAC(float tolerance, float threshold, int iterations) {
     } //end for loop, we now have the consensus points
 
     //now, if the number of consensus points is more than the threshold, re-fit the plane with all the consensus points and exit
-    if (consensusPoints.size() >= threshold) {
-      print("planeRANSAC has found a plane within parameters)=");
-      exit();
+    if (consensusPoints.size() >= threshold * savedPoints.size()) {
+      print("planeRANSAC has found a plane within parameters\n");
+      print(plane[0], plane[1]); //DEBUG, print plane parameters
+      System.exit(0);
     }
   } //end single iteration
   print("planeRANSAC was not able to find a plane within parameters");
+  System.exit(1);
 }
