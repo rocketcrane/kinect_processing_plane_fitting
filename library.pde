@@ -1,14 +1,14 @@
 
-void drawAxes(float size){
+void drawAxes(float size) {
   //X  - red
-  stroke(192,0,0);
-  line(0,0,0,size,0,0);
+  stroke(192, 0, 0);
+  line(0, 0, 0, size, 0, 0);
   //Y - green
-  stroke(0,192,0);
-  line(0,0,0,0,size,0);
+  stroke(0, 192, 0);
+  line(0, 0, 0, 0, size, 0);
   //Z - blue
-  stroke(0,0,192);
-  line(0,0,0,0,0,size);
+  stroke(0, 0, 192);
+  line(0, 0, 0, 0, 0, size);
 }
 
 //function to get and save an HD color image from the kinect in the sketch folder
@@ -37,17 +37,26 @@ ArrayList <PVector> getPointCloud() {
   return (savedPoints);
 }
 
-//function to get another point in the plane with displacement x and y
-PVector getPointInPlane(PVector[] plane, float x, float y) {
-  return(new PVector());
+//function to get plane corners from center point + normal vector
+PVector[] getPlaneCorners(PVector[] bestPlane, float w, float h) {
+  PVector y = bestPlane[1].cross(new PVector(1, 0, 0));
+  PVector x = y.cross(bestPlane[1]);
+  PVector hy = y.setMag(h/2);
+  PVector hx = x.setMag(w/2);
+  PVector tl = PVector.sub(PVector.add(bestPlane[0], hy), hx);
+  PVector bl = PVector.sub(PVector.sub(bestPlane[0], hy), hx);
+  PVector br = PVector.add(PVector.sub(bestPlane[0], hy), hx);
+  PVector tr = PVector.add(PVector.add(bestPlane[0], hy), hx);
+  PVector[] corners = {tl,bl,br,tr};
+  return (corners);
 }
 
 PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float threshold, int iterations) {
   PVector[] plane = new PVector[2]; //to store best fit plane
-  
+
   //iteratively run this algorithm multiple times
   for (int j = 0; j < iterations; j++) {
-    
+
     PVector[] currentPoints = new PVector[3]; //stores points for current iteration
     //let's first get three random points, the minimum required to fit a plane
     for (int i = 0; i < 3; i++) { //iterate to get 3 points
@@ -75,6 +84,7 @@ PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float th
     plane[1] = vec3; //save normal vector (second item)
 
     //now let's determine how many points from all the points fit within tolerance
+    PVector consensusSum = new PVector(0, 0, 0); //sum of all consensus points
     ArrayList <PVector> consensusPoints = new ArrayList<PVector>(); //save the consensus points
     for (int i = 0; i < savedPoints.size(); i++) { //iterate through all points
       PVector point = savedPoints.get(i); //gets current point
@@ -86,16 +96,17 @@ PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float th
       //only save consensus points
       if (dist <= tolerance) {
         consensusPoints.add(point);
+        consensusSum.add(point);
       }
     } //end for loop, we now have the consensus points
 
     //now, if the number of consensus points is more than the threshold, re-fit the plane with all the consensus points and exit
-    if (consensusPoints.size() >= threshold * savedPoints.size()) {
-      print("planeRANSAC has found a plane within parameters\n"); //DEBUG
-      //println(plane[0], plane[1]); //DEBUG, print plane parameters
+    if (consensusPoints.size() >= threshold * float(savedPoints.size())) {
+      plane[0] = consensusSum.div(float(consensusPoints.size())); //new plane center is average of all consensus points
+      println("planeRANSAC successful in ", j, " iterations"); //DEBUG
       return(plane);
     }
   } //end single iteration
-  print("planeRANSAC was not able to find a plane within parameters, returning best fit plane\n"); //DEBUG
-  return(plane);
+  //println("planeRANSAC unsuccessful, returning next best solution"); //DEBUG
+  return(null);
 }

@@ -2,14 +2,18 @@
 Test goals:
  1. capture color image
  2. capture point cloud and get an averaged plane from it
- 
- Borrows some basic 3D rotation/coordinates code from https://stackoverflow.com/questions/28731442/detecting-set-of-planes-from-point-cloud
-*/
+ */
 import KinectPV2.*;
+import peasy.*;
 import java.nio.*;
+import java.text.DecimalFormat;
 
 KinectPV2 kinect;
-float cR = 2; //compression ratio to reduce how far the points are from the center
+PeasyCam cam;
+DecimalFormat df = new DecimalFormat("#0.00"); //two decimal point format
+
+boolean drawPlane = false; //toggle plane
+float cloudDensity = 0.5; //percentage of cloud points to draw
 
 void setup() {
   kinect = new KinectPV2(this);
@@ -20,55 +24,76 @@ void setup() {
   kinect.init();
 
   size(1920, 1080, P3D);
-  lights();
-  noStroke();
+  cam = new PeasyCam(this, 100);
+  cam.rotateY(radians(180)); //rotate so we look at point cloud by default
   frameRate(30);
-  delay(3000); //delay so that kinect has time to initialize
+  delay(1000); //delay so that kinect has time to initialize
 }
 
 void draw() {
-  background(255); //clears background
-  //prints framerate
+  scale(1, -1); //right-hand rule
+  background(0); //clears background
+
+  cam.beginHUD(); //begin heads-up display
   textSize(20);
-  text(frameRate,0,20);
-  fill(0,0,0);
-  
-  ArrayList <PVector> pointCloud = getPointCloud();
-  PVector[] bestPlane = planeRANSAC(pointCloud, 1.0, 0.8, 20);
-  
-  //draw from center and rotate with mouse
-  translate(width * 0.5, height * 0.5, 0);
-  rotateX(map(mouseY, 0, height, -PI, PI));
-  rotateY(map(mouseX, 0, width, PI, -PI));
+  fill(192, 192, 0);
+  text(frameRate, 0, 20); //displays framerate
+  //displays keybindings
+  text("P - draw plane " + drawPlane, 5, 40);
+  text("+/- - cloud density " + round(cloudDensity*100) + "%", 5, 60);
+  cam.endHUD(); //end heads-up display
 
-  //draw centered coordinate system
-  drawAxes(80);
-  //iteratively draw all the points as spheres
+  //draw centered axes
+  drawAxes(20);
+
+  ArrayList <PVector> pointCloud = getPointCloud(); //get the pointCloud
+  int dM = int(map(cloudDensity, 0.1, 1, 10, 1)); //scale density modifier
+  //draw the pointCloud
+  stroke(255);
   for (int i = 0; i < pointCloud.size(); i++) {
-    PVector p = pointCloud.get(i); //get this point
-    pushMatrix(); //isolate coordinate system for pointCloud
-    point(p.x/cR, p.y/cR, p.z/cR);//draw translated point, scaled by compression ratio
-    //translate(p.x/cR, p.y/cR, p.z/cR); //can also use translate to draw objects, but much more CPU intensive
-    popMatrix(); //end isolated pointCloud coordinate system
+    if (i%dM == 0) { //draw points by density modifier
+      PVector p = pointCloud.get(i); //get this point
+      point(p.x, p.y, p.z);//draw translated point
+      //translate(p.x, p.y, p.z); //can also use translate to draw objects, but much more graphics intensive
+    }
   }
-  
-  //draw best fit plane from RANSAC
-  pushMatrix(); //isolate coordinate system for plane
-  translate(bestPlane[0].x/cR, bestPlane[0].y/cR, bestPlane[0].z/cR); //draw a box at best fit plane center, scaled by compression ratio
-  stroke(0,192,0);
-  box(10);
-  popMatrix(); //end isolated plane coordinate system
+
+  if (drawPlane) {
+    try {
+      PVector[] bestPlane = planeRANSAC(pointCloud, 1.0, 0.8, 30); //fit the plane
+      //float[] angles = rotationAngles(bestPlane[1]); //find the rotation angles
+      //draw plane
+      stroke(255);
+      strokeWeight(10);
+      point(bestPlane[0].x, bestPlane[0].y, bestPlane[0].z); //draw plane center point
+      PVector[] corners = getPlaneCorners(bestPlane, 600, 400);
+      PVector tl = corners[0]; PVector bl = corners[1]; PVector br = corners[2]; PVector tr = corners[3];
+      fill(0,192,0);
+      strokeWeight(1);
+      beginShape();
+      vertex(tl.x,tl.y,tl.z);
+      vertex(bl.x,bl.y,bl.z);
+      vertex(br.x,br.y,br.z);
+      vertex(tr.x,tr.y,tr.z);
+      endShape(CLOSE);
+    }
+    catch (IndexOutOfBoundsException e) {
+      println("ERROR: Index out of bounds, point cloud probably empty");
+    }
+    catch (NullPointerException n) {
+      println("ERROR: planeRANSAC did not successfully fit plane");
+    }
+  }
 }
 
-//zoom in and out with mouse wheel
-void mouseWheel(MouseEvent event) {
-  float e = event.getCount();
-  cR = cR + e*0.2;
-}
-
-void mousePressed() {
-  //getAndSaveImg();
-}
-
-void keyPressed() {
+public void keyReleased() {
+  if (key == 'p') drawPlane = !drawPlane;
+  if (key == '+' || key == '=') {
+    cloudDensity += 0.1;
+    if (cloudDensity > 1.0) cloudDensity = 1.0;
+  }
+  if (key == '-') {
+    cloudDensity -= 0.1;
+    if (cloudDensity < 0.1) cloudDensity = 0.1;
+  }
 }
