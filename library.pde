@@ -103,7 +103,7 @@ PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float th
     //now, if the number of consensus points is more than the threshold, re-fit the plane with all the consensus points and exit
     if (consensusPoints.size() >= threshold * float(savedPoints.size())) {
       plane[0] = consensusSum.div(float(consensusPoints.size())); //new plane center is average of all consensus points
-      println("planeRANSAC successful in ", j, " iterations"); //DEBUG
+      println("planeRANSAC successful in ", j, " iterations, ", consensusPoints.size(), " consensus points out of ", savedPoints.size(), " total points"); //DEBUG
       return(plane);
     }
   } //end single iteration
