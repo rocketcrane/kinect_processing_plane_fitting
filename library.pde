@@ -1,18 +1,14 @@
-//for getAndSaveImg
-PImage frame;
-int frameIndex = 0;
-//for getPointCloud
-ArrayList <PVector> savedPoints = new ArrayList<PVector>();
-//for RANSAC
-PVector[] plane = new PVector[2]; //first item is point on plane, second item is normal vector
 
+int frameIndex = 0; //for getAndSaveImg
 void getAndSaveImg() {
+  PImage frame;
   frame = kinect.getColorImage();
   frame.save("kinect"+str(frameIndex));
   frameIndex++;
 }
 
-void getPointCloud() {
+ArrayList <PVector> getPointCloud() {
+  ArrayList <PVector> savedPoints = new ArrayList <PVector> ();
   FloatBuffer pointCloudBuffer = kinect.getPointCloudDepthPos();
   for (int i = 0; i < kinect.WIDTHDepth * kinect.HEIGHTDepth; i++) {
     float x1 = pointCloudBuffer.get(i*3 + 0)*1000;
@@ -24,9 +20,12 @@ void getPointCloud() {
     }
   }
   print(savedPoints, "\n"); //DEBUG, print all points
+  return (savedPoints);
 }
 
-void planeRANSAC(float tolerance, float threshold, int iterations) {
+PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float threshold, int iterations) {
+  PVector[] plane = new PVector[2]; //to store best fit plane
+  
   //iteratively run this algorithm multiple times
   for (int j = 0; j < iterations; j++) {
     
@@ -75,9 +74,9 @@ void planeRANSAC(float tolerance, float threshold, int iterations) {
     if (consensusPoints.size() >= threshold * savedPoints.size()) {
       print("planeRANSAC has found a plane within parameters\n");
       print(plane[0], plane[1]); //DEBUG, print plane parameters
-      System.exit(0);
+      return(plane);
     }
   } //end single iteration
-  print("planeRANSAC was not able to find a plane within parameters");
-  System.exit(1);
+  print("planeRANSAC was not able to find a plane within parameters, returning best fit plane\n");
+  return(plane);
 }

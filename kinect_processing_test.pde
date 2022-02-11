@@ -15,16 +15,30 @@ void setup() {
   kinect.enablePointCloud(true);
   
   kinect.init();
+  
+  size(1920,1080,P3D);
+  lights();
+  noStroke();
 }
 
 void draw() {
+  ArrayList <PVector> pointCloud = getPointCloud();
+  PVector[] bestPlane = planeRANSAC(pointCloud, 10.0, 0.6, 1000);
+  
+  //iteratively draw all the points as spheres
+  for (int i = 0; i < pointCloud.size(); i++) {
+    float[] p = pointCloud.get(i).array(); //get this point as a float array
+    
+    pushMatrix(); //saves default coordinate system
+    translate(p[0],p[1],p[2]);
+    sphere(10);
+    popMatrix(); //restores default coordinate system
+  }
 }
 
 void mousePressed() {
   getAndSaveImg();
-  getPointCloud();
 }
 
 void keyPressed() {
-  planeRANSAC(10.0, 0.6, 100);
 }
