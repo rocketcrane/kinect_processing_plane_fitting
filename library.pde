@@ -11,6 +11,7 @@ void drawAxes(float size){
   line(0,0,0,0,0,size);
 }
 
+//function to get and save an HD color image from the kinect in the sketch folder
 int frameIndex = 0; //for getAndSaveImg
 void getAndSaveImg() {
   PImage frame;
@@ -19,6 +20,7 @@ void getAndSaveImg() {
   frameIndex++;
 }
 
+//function to get the point cloud from kinect as an arraylist of PVectors
 ArrayList <PVector> getPointCloud() {
   ArrayList <PVector> savedPoints = new ArrayList <PVector> ();
   FloatBuffer pointCloudBuffer = kinect.getPointCloudDepthPos();
@@ -33,6 +35,11 @@ ArrayList <PVector> getPointCloud() {
   }
   //print(savedPoints, "\n"); //DEBUG, print all points
   return (savedPoints);
+}
+
+//function to get another point in the plane with displacement x and y
+PVector getPointInPlane(PVector[] plane, float x, float y) {
+  return(new PVector());
 }
 
 PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float threshold, int iterations) {
@@ -73,7 +80,7 @@ PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float th
       PVector point = savedPoints.get(i); //gets current point
 
       //let's find the distance from the point to the plane
-      PVector p0p1 = point.sub(plane[0]); //gets vector from point on plane to current point
+      PVector p0p1 = PVector.sub(point, plane[0]); //gets vector from point on plane to current point
       float dist = p0p1.mag() * cos(PVector.angleBetween(p0p1, plane[1])); //gets distance: |vector|cos(theta)
 
       //only save consensus points
@@ -84,11 +91,11 @@ PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float th
 
     //now, if the number of consensus points is more than the threshold, re-fit the plane with all the consensus points and exit
     if (consensusPoints.size() >= threshold * savedPoints.size()) {
-      print("planeRANSAC has found a plane within parameters\n");
-      print(plane[0], plane[1]); //DEBUG, print plane parameters
+      print("planeRANSAC has found a plane within parameters\n"); //DEBUG
+      //println(plane[0], plane[1]); //DEBUG, print plane parameters
       return(plane);
     }
   } //end single iteration
-  print("planeRANSAC was not able to find a plane within parameters, returning best fit plane\n");
+  print("planeRANSAC was not able to find a plane within parameters, returning best fit plane\n"); //DEBUG
   return(plane);
 }
