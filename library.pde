@@ -1,4 +1,16 @@
 
+void drawAxes(float size){
+  //X  - red
+  stroke(192,0,0);
+  line(0,0,0,size,0,0);
+  //Y - green
+  stroke(0,192,0);
+  line(0,0,0,0,size,0);
+  //Z - blue
+  stroke(0,0,192);
+  line(0,0,0,0,0,size);
+}
+
 int frameIndex = 0; //for getAndSaveImg
 void getAndSaveImg() {
   PImage frame;
@@ -19,7 +31,7 @@ ArrayList <PVector> getPointCloud() {
       savedPoints.add(originalPt);
     }
   }
-  print(savedPoints, "\n"); //DEBUG, print all points
+  //print(savedPoints, "\n"); //DEBUG, print all points
   return (savedPoints);
 }
 
