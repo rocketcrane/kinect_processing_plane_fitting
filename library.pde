@@ -77,9 +77,9 @@ PVector[] planeRANSAC(ArrayList <PVector> savedPoints, float tolerance, float th
     } //end for loop, we now have 3 random points
 
     //now let's compute the plane from these three points
-    PVector vec1 = PVector.sub(currentPoints[1], currentPoints[0]).normalize(); //normalized vector from p0 to p1
-    PVector vec2 = PVector.sub(currentPoints[2], currentPoints[0]).normalize(); //normalized vector from p0 to p2
-    PVector vec3 = vec1.cross(vec2); //get normal vector to plane
+    PVector vec1 = PVector.sub(currentPoints[1], currentPoints[0]); //vector from p0 to p1
+    PVector vec2 = PVector.sub(currentPoints[2], currentPoints[0]); //vector from p0 to p2
+    PVector vec3 = vec1.cross(vec2).normalize(); //get normal vector to plane
     plane[0] = currentPoints[0]; //save point on plane (first item)
     plane[1] = vec3; //save normal vector (second item)
 
