@@ -22,13 +22,13 @@ boolean debug = true; //toggle debug
 boolean fitPlane = false; //toggle plane
 boolean drawPlane = false; //toggle plane
 boolean refresh = true; //toggle refresh
-float cloudDensity = 0.5; //percentage of cloud points to draw
+float cloudDensity = 0.7; //percentage of cloud points to draw
 
 //wrapper function to fit plane; run in separate thread
 void fitPlane() {
   if (!planeFitInProgress) {
     planeFitInProgress = true; //lock
-    bestPlane = planeRANSAC(pointCloud, 1.0, 0.23, 100); //fit the plane
+    bestPlane = planeRANSAC(pointCloud, 1.0, 0.23, 70); //fit the plane
     planeFitInProgress = false; //unlock
   }
 }
