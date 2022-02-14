@@ -7,17 +7,31 @@ import KinectPV2.*;
 import peasy.*;
 import java.nio.*;
 import java.text.DecimalFormat;
+//import java.util.concurrent.locks.*;
 
 KinectPV2 kinect;
 PeasyCam cam;
 CameraState state;
 ArrayList <PVector> pointCloud = new ArrayList <PVector>(); //point cloud
 PVector[] bestPlane = new PVector[2]; //best plane
-DecimalFormat df = new DecimalFormat("#0.00"); //two decimal point format
+boolean planeFitInProgress = false; //whether there is a plane fit thread running already (essentially a lock)
+DecimalFormat df2 = new DecimalFormat("#0.00"); //two decimal point format
+DecimalFormat df3 = new DecimalFormat("#0.000"); //three decimal point format
 
+boolean debug = true; //toggle debug
+boolean fitPlane = false; //toggle plane
 boolean drawPlane = false; //toggle plane
 boolean refresh = true; //toggle refresh
 float cloudDensity = 0.5; //percentage of cloud points to draw
+
+//wrapper function to fit plane; run in separate thread
+void fitPlane() {
+  if (!planeFitInProgress) {
+    planeFitInProgress = true; //lock
+    bestPlane = planeRANSAC(pointCloud, 1.0, 0.23, 100); //fit the plane
+    planeFitInProgress = false; //unlock
+  }
+}
 
 void setup() {
   kinect = new KinectPV2(this);
@@ -41,12 +55,13 @@ void draw() {
   cam.beginHUD(); //begin heads-up display
   textSize(20);
   fill(192, 192, 0);
-  text(frameRate, 0, 20); //displays framerate
+  text("FPS " + df2.format(frameRate), 0, 20); //displays framerate
   //displays keybindings
-  text("P - plane " + drawPlane, 5, 40);
-  text("+/- - cloud density " + round(cloudDensity*100) + "%", 5, 60);
-  text("1 - camera side view", 5, 80);
-  text("spacebar - refresh " + refresh, 5, 100);
+  text("P  | plane display " + drawPlane, 5, 40);
+  text("+/-  | cloud density " + round(cloudDensity*100) + "%", 5, 60);
+  text("1  | camera side view", 5, 80);
+  text("spacebar  | refresh " + refresh, 5, 100);
+  text("F  | plane fitting " + fitPlane, 5, 120);
   cam.endHUD(); //end heads-up display
 
   //draw centered axes
@@ -60,18 +75,17 @@ void draw() {
     if (i%dM == 0) { //draw points by density modifier
       PVector p = pointCloud.get(i); //get this point
       point(p.x, p.y, p.z);//draw translated point
-      //translate(p.x, p.y, p.z); //can also use translate to draw objects, but much more graphics intensive
     }
   }
 
+  if (fitPlane && !planeFitInProgress) thread("fitPlane"); //fit plane
+
   if (drawPlane) {
     try {
-      if (refresh) bestPlane = planeRANSAC(pointCloud, 0.1, 0.9, 100); //fit the plane
       PVector pC = bestPlane[0];
       PVector pN = bestPlane[1];
       PVector pNPoint1 = PVector.add(pC, PVector.mult(pN.normalize(), 100));
       PVector pNPoint2 = PVector.sub(pC, PVector.mult(pN.normalize(), 100));
-      //float[] angles = rotationAngles(bestPlane[1]); //find the rotation angles
       stroke(255);
       strokeWeight(10);
       point(pC.x, pC.y, pC.z); //draw plane center point
@@ -95,16 +109,16 @@ void draw() {
       endShape(CLOSE);
     }
     catch (IndexOutOfBoundsException e) {
-      println("ERROR: Index out of bounds, point cloud probably empty");
+      if (debug) println("ERROR: Index out of bounds, point cloud probably empty");
     }
     catch (NullPointerException n) {
-      println("ERROR: planeRANSAC did not successfully fit plane");
     }
   }
 }
 
 public void keyReleased() {
   if (key == 'p') drawPlane = !drawPlane;
+  if (key == 'f') fitPlane = !fitPlane;
   if (key == '+' || key == '=') {
     cloudDensity += 0.1;
     if (cloudDensity > 1.0) cloudDensity = 1.0;
