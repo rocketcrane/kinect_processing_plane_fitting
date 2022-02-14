@@ -64,6 +64,7 @@ PVector[] getPlaneCorners(PVector[] bestPlane, float w, float h) {
 //DEBUG
 ArrayList <Integer> bestIterations = new ArrayList<Integer>();
 ArrayList <Float> bpConsensusPercentages = new ArrayList<Float>();
+ArrayList <Float> minAvgErrs = new ArrayList<Float>();
 
 //RANSAC function to get best fit plane
 PVector[] planeRANSAC(ArrayList <PVector> pointCloud, float tolerance, float thresholdPercentage, int iterations) {
@@ -154,8 +155,9 @@ PVector[] planeRANSAC(ArrayList <PVector> pointCloud, float tolerance, float thr
   if (debug) {
     bestIterations.add(bestIteration); //this run's best iteration number
     bpConsensusPercentages.add(bpConsensusPercentage); //this run's best plane consensus percentage
-    print("avg best iteration = ", round(getArrayListAvg(bestIterations)));
-    println("  avg best plane consensus percentage = ", df3.format(getArrayListAvg(bpConsensusPercentages)), " (both inclusive of all RANSAC runs this session)");
+    minAvgErrs.add(minAvgErr); //this run's minimum average error
+    print("avg min error = ", df3.format(getArrayListAvg(minAvgErrs)), "  avg best iteration = ", round(getArrayListAvg(bestIterations)));
+    println("  avg best plane consensus percentage = ", df3.format(getArrayListAvg(bpConsensusPercentages)), " (inclusive of all RANSAC runs)\n");
   }
   
   //if unsuccessful, print error message

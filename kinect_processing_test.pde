@@ -60,7 +60,7 @@ void draw() {
   text("P  | plane display " + drawPlane, 5, 40);
   text("+/-  | cloud density " + round(cloudDensity*100) + "%", 5, 60);
   text("1  | camera side view", 5, 80);
-  text("spacebar  | refresh " + refresh, 5, 100);
+  text("spacebar  | point cloud refresh " + refresh, 5, 100);
   text("F  | plane fitting " + fitPlane, 5, 120);
   cam.endHUD(); //end heads-up display
 
