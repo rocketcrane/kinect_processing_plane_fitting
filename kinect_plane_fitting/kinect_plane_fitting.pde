@@ -140,7 +140,7 @@ void draw() {
       if (debug) println("ERROR: Index out of bounds, point cloud probably empty");
     }
     catch (NullPointerException n) {
-      //if (debug) println("ERROR: no plane");
+      if (debug) println("ERROR: no plane");
     }
   }
 }
