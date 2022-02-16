@@ -1,10 +1,35 @@
 /*
-Copyright© 2022, Lingxiu C Zhang
+LICENSE & COPYRIGHT:
+Copyright© 2022, Lingxiu C Zhang (https://github.com/rocketcrane/kinect_processing_plane_fitting)
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+Released under GPL-3.0-or-later
+This file is part of the kinect_plane_fitting program.
+Kinect_plane_fitting is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
- */
+*/
+ 
+/*
+This is a simple plane-fitting program for the Kinect V2 point cloud, using a RANSAC-like algorithm.
+It relies on the KinectPV2 library to interface with the Kinect, and the PeasyCam library to help with 3D rendering and camera movement.
+Install those two libraries, plug in a Kinect, and try it out!
+
+keybindings:
+P: draw plane on/off
+F: fit plane on/off
+S: save a HD color image from the camera to sketch folder
++/-: change point cloud display density (reduce density if framerate is too low)
+space: toggle kinect point cloud refresh
+
+tuning the planeRANSAC function:
+the function has three inputs- tolerance (max error for a point to be considered part of consensus set), 
+                               threshold (minimum percentage of points that need to be in the consensus set),
+                               iterations (how many iterations to run the program for)
+To tune, start with a relatively large tolerance and low threshold.
+Decrease tolerance / increase threshold until your plane jumps around less but still fits correctly in the set number of iterations.
+Lower iterations will mean the function runs faster, but will be a bit less accurate.
+*/
+ 
 import KinectPV2.*;
 import peasy.*;
 import java.nio.*;
@@ -12,20 +37,21 @@ import java.text.DecimalFormat;
 
 KinectPV2 kinect;
 PeasyCam cam;
-CameraState state;
-ArrayList <PVector> pointCloud = new ArrayList <PVector>(); //point cloud
-PVector[] bestPlane = new PVector[2]; //best plane
-boolean planeFitInProgress = false; //whether there is a plane fit thread running already (essentially a lock)
+
 DecimalFormat df2 = new DecimalFormat("#0.00"); //two decimal point format
 DecimalFormat df3 = new DecimalFormat("#0.000"); //three decimal point format
 
-boolean debug = true; //toggle debug
+ArrayList <PVector> pointCloud = new ArrayList <PVector>(); //point cloud
+PVector[] bestPlane = new PVector[2]; //best plane
+boolean planeFitInProgress = false; //whether there is a plane fit thread running already (essentially a lock)
+
+boolean debug = true; //toggle debug messages
 boolean fitPlane = false; //toggle plane
 boolean drawPlane = false; //toggle plane
 boolean refresh = true; //toggle refresh
 float cloudDensity = 0.7; //percentage of cloud points to draw
 
-//wrapper function to fit plane; run in separate thread
+//wrapper function to fit plane; runs in separate thread
 void fitPlane() {
   if (!planeFitInProgress) {
     planeFitInProgress = true; //lock
@@ -35,23 +61,24 @@ void fitPlane() {
 }
 
 void setup() {
+  //set up kinect
   kinect = new KinectPV2(this);
   kinect.enableColorImg(true);
   kinect.enableDepthImg(true);
   kinect.enablePointCloud(true);
-
   kinect.init();
 
   size(1920, 1080, P3D);
   cam = new PeasyCam(this, 100);
-  cam.rotateY(radians(180)); //rotate so we look at point cloud by default
+  cam.rotateY(radians(180)); //rotate so we look at Kinect point cloud by default
   frameRate(60);
-  delay(1000); //delay so that kinect has time to initialize
+  
+  delay(1000); //delay 1 second so that kinect has time to initialize
 }
 
 void draw() {
-  scale(1, -1); //right-hand rule
-  background(0); //clears background
+  scale(1, -1); //flips display for right-hand rule, more common in robotics
+  background(0); //clear background
 
   cam.beginHUD(); //begin heads-up display
   textSize(20);
@@ -63,10 +90,10 @@ void draw() {
   text("1  | camera side view", 5, 80);
   text("spacebar  | point cloud refresh " + refresh, 5, 100);
   text("F  | plane fitting " + fitPlane, 5, 120);
+  text("S  | save camera image", 5, 140);
   cam.endHUD(); //end heads-up display
 
-  //draw centered axes
-  drawAxes(20);
+  drawAxes(20); //draw centered axes
 
   if (refresh) pointCloud = getPointCloud(); //get the pointCloud
   int dM = int(map(cloudDensity, 0.1, 1, 10, 1)); //scale density modifier
@@ -79,12 +106,12 @@ void draw() {
     }
   }
 
-  if (fitPlane && !planeFitInProgress) thread("fitPlane"); //fit plane
+  if (fitPlane && !planeFitInProgress) thread("fitPlane"); //fit plane in separate thread
 
   if (drawPlane) {
     try {
-      PVector pC = bestPlane[0];
-      PVector pN = bestPlane[1];
+      PVector pC = bestPlane[0]; //plane center
+      PVector pN = bestPlane[1]; //plane normal vector
       PVector pNPoint1 = PVector.add(pC, PVector.mult(pN.normalize(), 100));
       PVector pNPoint2 = PVector.sub(pC, PVector.mult(pN.normalize(), 100));
       stroke(255);
@@ -113,6 +140,7 @@ void draw() {
       if (debug) println("ERROR: Index out of bounds, point cloud probably empty");
     }
     catch (NullPointerException n) {
+      //if (debug) println("ERROR: no plane");
     }
   }
 }
@@ -120,6 +148,7 @@ void draw() {
 public void keyReleased() {
   if (key == 'p') drawPlane = !drawPlane;
   if (key == 'f') fitPlane = !fitPlane;
+  if (key == 's') getAndSaveImg();
   if (key == '+' || key == '=') {
     cloudDensity += 0.1;
     if (cloudDensity > 1.0) cloudDensity = 1.0;
@@ -127,14 +156,6 @@ public void keyReleased() {
   if (key == '-') {
     cloudDensity -= 0.1;
     if (cloudDensity < 0.1) cloudDensity = 0.1;
-  }
-  if (key == '1') {
-    try {
-      cam.setState(state, 1000);
-    }
-    catch (NullPointerException n) {
-      println("ERROR: camera state not yet set");
-    }
   }
   if (key == ' ') refresh = !refresh;
 }

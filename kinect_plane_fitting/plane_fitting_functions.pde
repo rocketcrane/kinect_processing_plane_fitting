@@ -1,3 +1,14 @@
+/*
+LICENSE & COPYRIGHT:
+Copyright© 2022, Lingxiu C Zhang (https://github.com/rocketcrane/kinect_processing_plane_fitting)
+
+Released under GPL-3.0-or-later
+This file is part of the kinect_plane_fitting program.
+Kinect_plane_fitting is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 //function to draw 3D axes
 void drawAxes(float size) {
   //X (red)
@@ -11,7 +22,7 @@ void drawAxes(float size) {
   line(0, 0, 0, 0, 0, size);
 }
 
-//function to calculate average value of an ArrayList
+//function to calculate average value of an ArrayList of numbers
 float getArrayListAvg(ArrayList l) {
   double total = 0.0;
   for (int i = 0; i < l.size(); i++) {
@@ -47,7 +58,7 @@ ArrayList <PVector> getPointCloud() {
   return (savedPoints);
 }
 
-//function to get plane corners from center point + normal vector
+//function to get plane corners from plabe center point + normal vector
 PVector[] getPlaneCorners(PVector[] bestPlane, float w, float h) {
   PVector y = bestPlane[1].cross(new PVector(1, 0, 0));
   PVector x = y.cross(bestPlane[1]);
@@ -67,6 +78,7 @@ ArrayList <Float> bpConsensusPercentages = new ArrayList<Float>();
 ArrayList <Float> minAvgErrs = new ArrayList<Float>();
 
 //RANSAC function to get best fit plane
+//returns a plane as a PVector array of two items: plane center point as a PVector (index 0) and plane normal vector as a PVector (index 1)
 PVector[] planeRANSAC(ArrayList <PVector> pointCloud, float tolerance, float thresholdPercentage, int iterations) {
   PVector[] bestPlane = new PVector[2]; //to store best plane
   float minAvgErr = Float.POSITIVE_INFINITY; //to store minimum average of errors of consensus points
@@ -160,7 +172,8 @@ PVector[] planeRANSAC(ArrayList <PVector> pointCloud, float tolerance, float thr
     println("  avg best plane consensus percentage = ", df3.format(getArrayListAvg(bpConsensusPercentages)), " (inclusive of all RANSAC runs)\n");
   }
   
-  //if unsuccessful, print error message
+  //DEBUG: if unsuccessful, print error message
   if (minAvgErr == Float.POSITIVE_INFINITY && debug) println("ERROR: planeRANSAC did not successfully fit plane");
+  
   return (bestPlane);
 }
