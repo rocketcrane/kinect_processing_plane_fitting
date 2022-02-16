@@ -55,7 +55,7 @@ float cloudDensity = 0.7; //percentage of cloud points to draw
 void fitPlane() {
   if (!planeFitInProgress) {
     planeFitInProgress = true; //lock
-    bestPlane = planeRANSAC(pointCloud, 1.0, 0.23, 70); //fit the plane
+    bestPlane = planeRANSAC(pointCloud, 3.2, 0.6, 70); //fit the plane
     planeFitInProgress = false; //unlock
   }
 }

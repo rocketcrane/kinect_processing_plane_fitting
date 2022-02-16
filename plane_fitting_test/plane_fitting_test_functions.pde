@@ -3,8 +3,8 @@ LICENSE & COPYRIGHT:
 Copyright© 2022, Lingxiu C Zhang (https://github.com/rocketcrane/kinect_processing_plane_fitting)
 
 Released under GPL-3.0-or-later
-This file is part of the kinect_plane_fitting program.
-Kinect_plane_fitting is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This file is part of the plane_fitting_test program.
+Plane_fitting_test is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -30,32 +30,6 @@ float getArrayListAvg(ArrayList l) {
   }
   float avg = (float) total / l.size();
   return (avg);
-}
-
-//function to get and save an HD color image from the kinect in the sketch folder
-int frameIndex = 0; //for getAndSaveImg
-void getAndSaveImg() {
-  PImage frame;
-  frame = kinect.getColorImage();
-  frame.save("kinect"+str(frameIndex));
-  frameIndex++;
-}
-
-//function to get the point cloud from kinect as an arraylist of PVectors
-ArrayList <PVector> getPointCloud() {
-  ArrayList <PVector> savedPoints = new ArrayList <PVector> ();
-  FloatBuffer pointCloudBuffer = kinect.getPointCloudDepthPos();
-  for (int i = 0; i < kinect.WIDTHDepth * kinect.HEIGHTDepth; i++) {
-    float x1 = pointCloudBuffer.get(i*3 + 0)*1000;
-    float y1 = pointCloudBuffer.get(i*3 + 1)*1000;
-    float z1 = pointCloudBuffer.get(i*3 + 2)*1000;
-    if (z1>0) {  //if our point z value is greater than zero
-      PVector originalPt = new PVector(x1, y1, z1);
-      savedPoints.add(originalPt);
-    }
-  }
-  //println(savedPoints); //DEBUG, print all points
-  return (savedPoints);
 }
 
 //function to get plane corners from plabe center point + normal vector
@@ -167,7 +141,7 @@ PVector[] planeRANSAC(ArrayList <PVector> pointCloud, float tolerance, float thr
   if (debug) {
     bestIterations.add(bestIteration); //this run's best iteration number
     bpConsensusPercentages.add(bpConsensusPercentage); //this run's best plane consensus percentage
-    minAvgErrs.add(minAvgErr); //this run's minimum average error
+    if (minAvgErr < Float.POSITIVE_INFINITY) minAvgErrs.add(minAvgErr); //this run's minimum average error
     print("avg min error = ", df3.format(getArrayListAvg(minAvgErrs)), "  avg best iteration = ", round(getArrayListAvg(bestIterations)));
     println("  avg best plane consensus percentage = ", df3.format(getArrayListAvg(bpConsensusPercentages)), " (inclusive of all RANSAC runs)\n");
   }
