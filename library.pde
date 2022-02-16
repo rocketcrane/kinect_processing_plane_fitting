@@ -1,12 +1,12 @@
-//function to draw 3D-axes
+//function to draw 3D axes
 void drawAxes(float size) {
-  //X  - red
+  //X (red)
   stroke(192, 0, 0);
   line(0, 0, 0, size, 0, 0);
-  //Y - green
+  //Y (green)
   stroke(0, 192, 0);
   line(0, 0, 0, 0, size, 0);
-  //Z - blue
+  //Z (blue)
   stroke(0, 0, 192);
   line(0, 0, 0, 0, 0, size);
 }
