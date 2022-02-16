@@ -1,29 +1,29 @@
 /*
 LICENSE & COPYRIGHT:
- Copyright© 2022, Lingxiu C Zhang (https://github.com/rocketcrane/kinect_processing_plane_fitting)
+Copyright© 2022, Lingxiu C Zhang (https://github.com/rocketcrane/kinect_processing_plane_fitting)
  
- Released under GPL-3.0-or-later
- This file is part of the kinect_plane_fitting program.
- Plane_fitting_test is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
- This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
- */
+Released under GPL-3.0-or-later
+This file is part of the plane_fitting_test program. (v1.0)
+Plane_fitting_test is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+*/
 
 /*
 This is a simple plane-fitting program on a generated point cloud, using a RANSAC-like algorithm. For the kinect version, look at kinect_plane_fitting.
  
- keybindings:
- P: draw plane on/off
- +/-: change point cloud display density (reduce density if framerate is too low)
- 
- tuning the planeRANSAC function:
- the function has three inputs- tolerance (max error for a point to be considered part of consensus set),
- threshold (minimum percentage of points that need to be in the consensus set),
- iterations (how many iterations to run the program for)
- To tune, start with a relatively large tolerance and low threshold.
- Decrease tolerance / increase threshold until your plane jumps around less but still fits correctly in the set number of iterations.
- Lower iterations will mean the function runs faster, but will be a bit less accurate.
- */
+keybindings:
+P: draw plane on/off
++/-: change point cloud display density (reduce density if framerate is too low)
+
+tuning the planeRANSAC function:
+the function has three inputs- tolerance (max error for a point to be considered part of consensus set),
+threshold (minimum percentage of points that need to be in the consensus set),
+iterations (how many iterations to run the program for)
+To tune, start with a relatively large tolerance and low threshold.
+Decrease tolerance / increase threshold until your plane jumps around less but still fits correctly in the set number of iterations.
+Lower iterations will mean the function runs faster, but will be a bit less accurate.
+*/
 
 import peasy.*;
 import java.nio.*;
@@ -125,7 +125,7 @@ void draw() {
       if (debug) println("plane center = ", plane[0], " normal vector = ", plane[1], "\n"); //DEBUG
     }
     catch (IndexOutOfBoundsException e) {
-      if(debug) println("ERROR: Index out of bounds, point cloud probably empty");
+      if (debug) println("ERROR: Index out of bounds, point cloud probably empty");
     }
     catch (NullPointerException n) {
       if (debug) println("ERROR: no plane");
